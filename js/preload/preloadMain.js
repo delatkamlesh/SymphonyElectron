@@ -11,7 +11,7 @@
 // also to bring pieces of node.js:
 // https://github.com/electron/electron/issues/2984
 //
-const { ipcRenderer, remote, crashReporter, webFrame } = require('electron');
+const { ipcRenderer, remote, crashReporter } = require('electron');
 
 const throttle = require('../utils/throttle.js');
 const apiEnums = require('../enums/api.js');
@@ -36,21 +36,21 @@ let isAltKey = false;
 let isMenuOpen = false;
 
 try {
-    Search = remote.require('swift-search').Search;
+    Search = null;
 } catch (e) {
     // eslint-disable-next-line no-console
     console.warn("Failed to initialize swift search. You'll need to include the search dependency. Contact the developers for more details");
 }
 
 try {
-    SearchUtils = remote.require('swift-search').SearchUtils;
+    SearchUtils = null;
 } catch (e) {
     // eslint-disable-next-line no-console
     console.warn("Failed to initialize swift search (Utils). You'll need to include the search dependency. Contact the developers for more details");
 }
 
 try {
-    CryptoLib = remote.require('./cryptoLib.js');
+    CryptoLib = null;
 } catch (e) {
     CryptoLib = null;
     // eslint-disable-next-line no-console
@@ -85,15 +85,6 @@ const throttledSetIsInMeetingStatus = throttle(1000, function (isInMeeting) {
  */
 local.ipcRenderer.on('on-page-load', () => {
     snackBar = new SnackBar();
-
-    webFrame.setSpellCheckProvider('en-US', true, {
-        spellCheck(text) {
-            return !local.ipcRenderer.sendSync(apiName, {
-                cmd: apiCmds.isMisspelled,
-                text
-            });
-        }
-    });
 
     // only registers main window's preload
     if (window.name === 'main') {

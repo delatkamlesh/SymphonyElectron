@@ -54,8 +54,6 @@ require('./memoryMonitor.js');
 app.setAsDefaultProtocolClient('symphony');
 
 const windowMgr = require('./windowMgr.js');
-const { ContextMenuBuilder } = require('electron-spellchecker');
-const i18n = require('./translation/i18n');
 
 getConfigField('url')
     .then(initializeCrashReporter)
@@ -243,34 +241,6 @@ app.on('open-url', function (event, url) {
     log.send(logLevels.INFO, `Open URL event triggered with url ${JSON.stringify(url)}`);
     handleProtocolAction(url);
 });
-
-app.on('web-contents-created', function (event, webContents) {
-    onWebContent(webContents);
-});
-
-function onWebContent(webContents) {
-    const spellchecker = windowMgr.getSpellchecker();
-    spellchecker.initializeSpellChecker();
-    spellchecker.updateContextMenuLocale(i18n.getMessageFor('ContextMenu'));
-    const contextMenuBuilder = new ContextMenuBuilder(spellchecker.spellCheckHandler, webContents, false, spellchecker.processMenu.bind(spellchecker));
-    let currentLocale = i18n.getLanguage();
-
-    const contextMenuListener = (event, info) => {
-        log.send(logLevels.INFO, `Context menu event triggered for web contents with info ${JSON.stringify(info)}`);
-        if (currentLocale !== i18n.getLanguage()) {
-            contextMenuBuilder.setAlternateStringFormatter(spellchecker.getStringTable(i18n.getMessageFor('ContextMenu')));
-            spellchecker.updateContextMenuLocale(i18n.getMessageFor('ContextMenu'));
-            currentLocale = i18n.getLanguage();
-        }
-        contextMenuBuilder.showPopupMenu(info);
-    };
-
-    webContents.on('context-menu', contextMenuListener);
-
-    webContents.once('destroyed', () => {
-        webContents.removeListener('context-menu', contextMenuListener);
-    });
-}
 
 /**
  * Reads the config fields that are required for the menu items
